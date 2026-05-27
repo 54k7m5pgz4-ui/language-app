@@ -3,14 +3,9 @@ import { motion } from 'framer-motion'
 import { Flame, Zap, Star, Bot, Layers, Languages, Trophy, BookOpen } from 'lucide-react'
 import { useProgressStore } from '../../store/useProgressStore'
 import { APP_CONFIG, DAILY_GOAL_XP, XP_PER_LEVEL } from '../../config/appConfig'
+import { getFadeUpVariant } from '../../lib/animations'
 
 const DAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
-
-const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 16 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.3, delay },
-})
 
 function getGreeting() {
   const h = new Date().getHours()
@@ -36,98 +31,133 @@ export default function Dashboard() {
   const goalReached = todayXP >= DAILY_GOAL_XP
 
   const quickActions = [
-    { label: 'KI-Tutor', icon: Bot, gradient: 'from-indigo-500 to-violet-600', path: '/tutor', shadow: 'shadow-indigo-200 dark:shadow-none' },
-    { label: 'Vokabeln', icon: Layers, gradient: 'from-emerald-500 to-teal-600', path: '/vocab', shadow: 'shadow-emerald-200 dark:shadow-none' },
-    { label: 'Übersetzer', icon: Languages, gradient: 'from-rose-500 to-pink-600', path: '/translate', shadow: 'shadow-rose-200 dark:shadow-none' },
+    {
+      label: 'KI-Tutor',
+      icon: Bot,
+      gradient: 'from-indigo-500 to-violet-600',
+      path: '/tutor',
+      shadow: 'shadow-lg shadow-indigo-200 dark:shadow-indigo-900/40',
+    },
+    {
+      label: 'Vokabeln',
+      icon: Layers,
+      gradient: 'from-emerald-500 to-teal-600',
+      path: '/vocab',
+      shadow: 'shadow-lg shadow-emerald-200 dark:shadow-emerald-900/40',
+    },
+    {
+      label: 'Übersetzer',
+      icon: Languages,
+      gradient: 'from-rose-500 to-pink-600',
+      path: '/translate',
+      shadow: 'shadow-lg shadow-rose-200 dark:shadow-rose-900/40',
+    },
   ]
 
   const stats = [
     { label: 'Wörter', value: totalWordsLearned, emoji: '📚', color: 'text-indigo-500' },
-    { label: 'Lektionen', value: lessonsCompleted.length, emoji: '✅', color: 'text-emerald-500' },
+    {
+      label: 'Lektionen',
+      value: lessonsCompleted.length,
+      emoji: '✅',
+      color: 'text-emerald-500',
+    },
     { label: 'Tage-Serie', value: streak, emoji: '🔥', color: 'text-orange-500' },
   ]
 
   return (
     <div className="px-4 pt-4 pb-28 space-y-4">
-
       {/* Greeting */}
-      <motion.div {...fadeUp(0)}>
+      <motion.div {...getFadeUpVariant(0)}>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
           {getGreeting()} 👋
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
           Du lernst{' '}
-          <span className="font-semibold text-indigo-500">{APP_CONFIG.targetLanguage}</span>
-          {' · '}Level <span className="font-semibold">{APP_CONFIG.level}</span>
+          <span className="font-semibold text-indigo-500 dark:text-indigo-400">
+            {APP_CONFIG.targetLanguage}
+          </span>
+          {' · '}Level <span className="font-semibold text-indigo-600 dark:text-indigo-300">{APP_CONFIG.level}</span>
         </p>
       </motion.div>
 
       {/* Hero card: Streak + XP + Level */}
       <motion.div
-        {...fadeUp(0.05)}
-        className="bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600 rounded-3xl p-5 text-white shadow-xl shadow-indigo-200 dark:shadow-indigo-900/30"
+        {...getFadeUpVariant(0.05)}
+        className="bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600 rounded-3xl p-6 text-white shadow-xl shadow-indigo-300 dark:shadow-indigo-900/30 border border-indigo-400/30"
       >
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-6">
           {[
             { icon: Flame, iconColor: 'text-orange-300', value: streak, label: 'Tage-Serie' },
             { icon: Zap, iconColor: 'text-yellow-300', value: xp, label: 'XP gesamt' },
             { icon: Star, iconColor: 'text-amber-300', value: level, label: 'Level' },
           ].map(({ icon: Icon, iconColor, value, label }) => (
-            <div key={label} className="flex items-center gap-2.5">
-              <div className="bg-white/15 rounded-xl p-2">
-                <Icon size={18} className={iconColor} />
+            <motion.div
+              key={label}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-center gap-2.5"
+            >
+              <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-2.5 border border-white/30">
+                <Icon size={20} className={iconColor} strokeWidth={2} />
               </div>
               <div>
-                <div className="text-xl font-bold leading-none">{value}</div>
-                <div className="text-indigo-200 text-[11px] mt-0.5">{label}</div>
+                <div className="text-2xl font-bold leading-none">{value}</div>
+                <div className="text-indigo-200 text-[11px] mt-0.5 font-medium">{label}</div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
         {/* Level progress bar */}
         <div>
-          <div className="flex justify-between text-[11px] text-indigo-200 mb-1.5">
+          <div className="flex justify-between text-[11px] text-indigo-200 mb-2 font-medium">
             <span>Level {level}</span>
-            <span>{xpInLevel} / {XP_PER_LEVEL} XP</span>
+            <span>
+              {xpInLevel} / {XP_PER_LEVEL} XP
+            </span>
           </div>
-          <div className="bg-white/20 rounded-full h-2 overflow-hidden">
+          <div className="bg-white/20 backdrop-blur-sm rounded-full h-2.5 overflow-hidden border border-white/30">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${levelPct}%` }}
               transition={{ duration: 0.9, delay: 0.2, ease: 'easeOut' }}
-              className="h-full bg-white rounded-full"
+              className="h-full bg-white rounded-full shadow-lg"
             />
           </div>
-          <div className="text-right text-[10px] text-indigo-200 mt-1">{levelPct}% bis Level {level + 1}</div>
+          <div className="text-right text-[10px] text-indigo-200 mt-1.5 font-medium">
+            {levelPct}% bis Level {level + 1}
+          </div>
         </div>
       </motion.div>
 
       {/* Daily Goal */}
       <motion.div
-        {...fadeUp(0.1)}
-        className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700/60 shadow-sm"
+        {...getFadeUpVariant(0.1)}
+        className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 border border-slate-100 dark:border-slate-700/60 shadow-md hover:shadow-lg transition-shadow"
       >
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="font-semibold text-slate-900 dark:text-white text-sm">Tagesziel</h2>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+            <h2 className="font-bold text-slate-900 dark:text-white text-base">Tagesziel</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
               {APP_CONFIG.intensity} · {DAILY_GOAL_XP} XP täglich
             </p>
           </div>
           <div className="text-right">
-            <span className="text-lg font-bold text-slate-900 dark:text-white">{todayXP}</span>
-            <span className="text-sm text-slate-400 dark:text-slate-500"> / {DAILY_GOAL_XP} XP</span>
+            <span className="text-2xl font-bold text-slate-900 dark:text-white">{todayXP}</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium"> / {DAILY_GOAL_XP}</span>
           </div>
         </div>
-        <div className="bg-slate-100 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
+        <div className="bg-slate-100 dark:bg-slate-700/50 rounded-full h-3.5 overflow-hidden border border-slate-200 dark:border-slate-700">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${dailyPct}%` }}
             transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
-            className={`h-full rounded-full ${goalReached
-              ? 'bg-gradient-to-r from-emerald-400 to-emerald-500'
-              : 'bg-gradient-to-r from-indigo-400 to-indigo-500'
+            className={`h-full rounded-full ${
+              goalReached
+                ? 'bg-gradient-to-r from-emerald-400 to-emerald-500 shadow-lg shadow-emerald-500/50'
+                : 'bg-gradient-to-r from-indigo-400 to-indigo-500 shadow-lg shadow-indigo-500/30'
             }`}
           />
         </div>
@@ -135,12 +165,12 @@ export default function Dashboard() {
           <motion.p
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-emerald-500 dark:text-emerald-400 text-xs font-semibold mt-2 text-center"
+            className="text-emerald-600 dark:text-emerald-400 text-xs font-bold mt-3 text-center"
           >
-            🎉 Tagesziel erreicht! Weiter so!
+            🎉 Tagesziel erreicht!
           </motion.p>
         ) : (
-          <p className="text-slate-400 dark:text-slate-500 text-[11px] mt-2 text-right">
+          <p className="text-slate-500 dark:text-slate-400 text-[11px] mt-3 text-right font-medium">
             Noch {DAILY_GOAL_XP - todayXP} XP bis zum Ziel
           </p>
         )}
@@ -148,120 +178,151 @@ export default function Dashboard() {
 
       {/* Weekly Activity */}
       <motion.div
-        {...fadeUp(0.15)}
-        className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700/60 shadow-sm"
+        {...getFadeUpVariant(0.15)}
+        className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 border border-slate-100 dark:border-slate-700/60 shadow-md"
       >
-        <h2 className="font-semibold text-slate-900 dark:text-white text-sm mb-3">Diese Woche</h2>
-        <div className="flex justify-between items-end">
+        <h2 className="font-bold text-slate-900 dark:text-white text-base mb-4">Diese Woche</h2>
+        <div className="flex justify-between items-end gap-1">
           {DAYS.map((day, i) => {
             const hasXP = weekXP[i] > 0
             const isToday = i === todayIdx
             const isFuture = i > todayIdx
             return (
-              <div key={day} className="flex flex-col items-center gap-1.5">
+              <motion.div
+                key={day}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="flex flex-col items-center gap-2"
+              >
                 {/* XP bar */}
-                <div className="w-6 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden" style={{ height: 32 }}>
+                <div className="w-7 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden" style={{ height: 32 }}>
                   {hasXP && (
                     <motion.div
                       initial={{ height: 0 }}
                       animate={{ height: `${Math.min((weekXP[i] / DAILY_GOAL_XP) * 100, 100)}%` }}
                       transition={{ duration: 0.5, delay: 0.1 * i }}
-                      className={`w-full rounded-full mt-auto ${isToday
-                        ? 'bg-indigo-500'
-                        : 'bg-emerald-400 dark:bg-emerald-500'
+                      className={`w-full rounded-full mt-auto ${
+                        isToday
+                          ? 'bg-gradient-to-t from-indigo-500 to-indigo-400 shadow-lg'
+                          : 'bg-gradient-to-t from-emerald-400 to-emerald-300'
                       }`}
-                      style={{ marginTop: 'auto', position: 'absolute', bottom: 0 }}
+                      style={{ marginTop: 'auto' }}
                     />
                   )}
                 </div>
                 {/* Day circle */}
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
+                <motion.div
+                  whileTap={{ scale: 0.9 }}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                     isToday && hasXP
-                      ? 'bg-indigo-500 text-white shadow-md shadow-indigo-200 dark:shadow-indigo-900/40'
+                      ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-300 dark:shadow-indigo-900/50'
                       : isToday
                       ? 'border-2 border-indigo-400 text-indigo-500 dark:text-indigo-400'
                       : hasXP
                       ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
                       : isFuture
-                      ? 'bg-slate-50 dark:bg-slate-750 text-slate-300 dark:text-slate-600'
-                      : 'bg-slate-100 dark:bg-slate-700 text-slate-400'
+                      ? 'bg-slate-50 dark:bg-slate-700/50 text-slate-300 dark:text-slate-600'
+                      : 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500'
                   }`}
                 >
                   {hasXP ? '✓' : day[0]}
-                </div>
-                <span className={`text-[10px] font-medium ${isToday ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                </motion.div>
+                <span
+                  className={`text-[10px] font-semibold ${
+                    isToday
+                      ? 'text-indigo-500 dark:text-indigo-400'
+                      : 'text-slate-400 dark:text-slate-500'
+                  }`}
+                >
                   {day}
                 </span>
-              </div>
+              </motion.div>
             )
           })}
         </div>
       </motion.div>
 
       {/* Stats */}
-      <motion.div {...fadeUp(0.2)} className="grid grid-cols-3 gap-3">
-        {stats.map(stat => (
-          <div
+      <motion.div
+        {...getFadeUpVariant(0.2)}
+        className="grid grid-cols-3 gap-3"
+      >
+        {stats.map((stat, idx) => (
+          <motion.div
             key={stat.label}
-            className="bg-white dark:bg-slate-800 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-700/60 shadow-sm text-center"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 * idx }}
+            className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 border border-slate-100 dark:border-slate-700/60 shadow-md hover:shadow-lg transition-shadow text-center"
           >
-            <div className="text-2xl mb-1">{stat.emoji}</div>
-            <div className={`text-xl font-bold ${stat.color}`}>{stat.value}</div>
-            <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{stat.label}</div>
-          </div>
+            <div className="text-3xl mb-2">{stat.emoji}</div>
+            <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
+              {stat.label}
+            </div>
+          </motion.div>
         ))}
       </motion.div>
 
       {/* Quick Start */}
-      <motion.div {...fadeUp(0.25)}>
-        <h2 className="font-semibold text-slate-900 dark:text-white text-sm mb-3">Schnell starten</h2>
+      <motion.div {...getFadeUpVariant(0.25)}>
+        <h2 className="font-bold text-slate-900 dark:text-white text-base mb-3">Schnell starten</h2>
         <div className="grid grid-cols-3 gap-3">
-          {quickActions.map(item => (
+          {quickActions.map((item) => (
             <motion.button
               key={item.label}
-              whileTap={{ scale: 0.94 }}
+              whileTap={{ scale: 0.92 }}
+              whileHover={{ y: -2 }}
               onClick={() => navigate(item.path)}
-              className={`bg-gradient-to-br ${item.gradient} rounded-2xl p-4 text-white flex flex-col items-center gap-2 shadow-lg ${item.shadow}`}
+              className={`bg-gradient-to-br ${item.gradient} rounded-2xl p-4 text-white flex flex-col items-center gap-2 shadow-lg ${item.shadow} border border-white/20 transition-all`}
             >
-              <item.icon size={22} strokeWidth={2} />
-              <span className="text-xs font-semibold">{item.label}</span>
+              <item.icon size={24} strokeWidth={2} />
+              <span className="text-xs font-bold">{item.label}</span>
             </motion.button>
           ))}
         </div>
       </motion.div>
 
       {/* Continue Learning */}
-      <motion.div {...fadeUp(0.3)}>
-        <h2 className="font-semibold text-slate-900 dark:text-white text-sm mb-3">Weitermachen</h2>
+      <motion.div {...getFadeUpVariant(0.3)}>
+        <h2 className="font-bold text-slate-900 dark:text-white text-base mb-3">Weitermachen</h2>
         <motion.button
-          whileTap={{ scale: 0.98 }}
+          whileTap={{ scale: 0.97 }}
+          whileHover={{ y: -2 }}
           onClick={() => navigate('/course')}
-          className="w-full bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700/60 shadow-sm flex items-center gap-4 text-left"
+          className="w-full bg-white dark:bg-slate-800/80 rounded-2xl p-4 border border-slate-100 dark:border-slate-700/60 shadow-md hover:shadow-lg flex items-center gap-4 text-left transition-all"
         >
-          <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/40 rounded-xl flex items-center justify-center flex-shrink-0">
-            <BookOpen size={22} className="text-indigo-500" />
+          <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-900/40 dark:to-indigo-900/20 rounded-xl flex items-center justify-center flex-shrink-0 border border-indigo-200 dark:border-indigo-700/40">
+            <BookOpen size={22} className="text-indigo-600 dark:text-indigo-400" strokeWidth={2} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-slate-900 dark:text-white text-sm">Kurs fortsetzen</p>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">
+            <p className="font-bold text-slate-900 dark:text-white text-sm">Kurs fortsetzen</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate font-medium">
               {APP_CONFIG.targetLanguage} · {APP_CONFIG.level} · {APP_CONFIG.goal}
             </p>
-            <div className="flex items-center gap-1.5 mt-2">
-              <div className="flex-1 bg-slate-100 dark:bg-slate-700 rounded-full h-1.5">
-                <div className="bg-indigo-400 rounded-full h-1.5" style={{ width: `${(lessonsCompleted.length / 19) * 100}%` }} />
+            <div className="flex items-center gap-2 mt-2">
+              <div className="flex-1 bg-slate-100 dark:bg-slate-700 rounded-full h-2">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(lessonsCompleted.length / 19) * 100}%` }}
+                  transition={{ duration: 0.6 }}
+                  className="bg-gradient-to-r from-indigo-400 to-indigo-500 rounded-full h-2"
+                />
               </div>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500">{lessonsCompleted.length}/19</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold whitespace-nowrap">
+                {lessonsCompleted.length}/19
+              </span>
             </div>
           </div>
-          <span className="text-slate-300 dark:text-slate-600 text-lg">›</span>
+          <span className="text-slate-400 dark:text-slate-600 text-xl">›</span>
         </motion.button>
       </motion.div>
 
       {/* Achievements row */}
-      <motion.div {...fadeUp(0.35)}>
-        <h2 className="font-semibold text-slate-900 dark:text-white text-sm mb-3">Errungenschaften</h2>
-        <div className="flex gap-2 overflow-x-auto pb-1">
+      <motion.div {...getFadeUpVariant(0.35)}>
+        <h2 className="font-bold text-slate-900 dark:text-white text-base mb-3">Errungenschaften</h2>
+        <div className="flex gap-2 overflow-x-auto pb-2">
           {[
             { emoji: '🌟', label: 'Erster Tag', unlocked: xp > 0 },
             { emoji: '🔥', label: '3 Tage', unlocked: streak >= 3 },
@@ -269,48 +330,58 @@ export default function Dashboard() {
             { emoji: '🎓', label: 'Lektion 1', unlocked: lessonsCompleted.length >= 1 },
             { emoji: '⚡', label: '100 XP', unlocked: xp >= 100 },
             { emoji: '🏆', label: '7 Tage', unlocked: streak >= 7 },
-          ].map(badge => (
-            <div
+          ].map((badge) => (
+            <motion.div
               key={badge.label}
-              className={`flex-shrink-0 flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={badge.unlocked ? { scale: 1.05, y: -2 } : {}}
+              className={`flex-shrink-0 flex flex-col items-center gap-1 p-3 rounded-2xl border-2 transition-all ${
                 badge.unlocked
-                  ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/40'
+                  ? 'bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-900/10 border-amber-200 dark:border-amber-800/40 shadow-md'
                   : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700/50 opacity-40'
               }`}
             >
               <span className="text-2xl">{badge.emoji}</span>
-              <span className={`text-[10px] font-medium text-center w-14 leading-tight ${
-                badge.unlocked ? 'text-amber-700 dark:text-amber-400' : 'text-slate-400'
-              }`}>{badge.label}</span>
-            </div>
+              <span
+                className={`text-[10px] font-bold text-center w-14 leading-tight ${
+                  badge.unlocked
+                    ? 'text-amber-700 dark:text-amber-400'
+                    : 'text-slate-400 dark:text-slate-500'
+                }`}
+              >
+                {badge.label}
+              </span>
+            </motion.div>
           ))}
         </div>
       </motion.div>
 
       {/* Tip of the day */}
       <motion.div
-        {...fadeUp(0.4)}
-        className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-4 border border-amber-100 dark:border-amber-800/30"
+        {...getFadeUpVariant(0.4)}
+        className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl p-4 border border-amber-200 dark:border-amber-800/40 shadow-md"
       >
         <div className="flex items-start gap-3">
-          <span className="text-xl flex-shrink-0">💡</span>
+          <span className="text-2xl flex-shrink-0">💡</span>
           <div>
-            <h3 className="font-semibold text-amber-800 dark:text-amber-300 text-sm">Tipp des Tages</h3>
-            <p className="text-amber-700 dark:text-amber-400 text-xs mt-1 leading-relaxed">
-              Täglich 10 Minuten üben ist effektiver als einmal pro Woche eine Stunde lernen. Regelmäßigkeit schlägt Intensität!
+            <h3 className="font-bold text-amber-900 dark:text-amber-300 text-sm">Tipp des Tages</h3>
+            <p className="text-amber-800 dark:text-amber-400 text-xs mt-1 leading-relaxed font-medium">
+              Täglich 10 Minuten üben ist effektiver als einmal pro Woche eine Stunde lernen. Regelmäßigkeit schlägt
+              Intensität!
             </p>
           </div>
         </div>
       </motion.div>
 
       {/* Demo XP button - shows animations */}
-      <motion.div {...fadeUp(0.45)} className="pb-4">
+      <motion.div {...getFadeUpVariant(0.45)} className="pb-4">
         <motion.button
-          whileTap={{ scale: 0.96 }}
+          whileTap={{ scale: 0.94 }}
           onClick={() => addXP(10)}
-          className="w-full bg-gradient-to-r from-indigo-500 to-violet-500 text-white rounded-2xl py-3.5 font-semibold text-sm shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30 flex items-center justify-center gap-2"
+          className="w-full bg-gradient-to-r from-indigo-500 to-violet-500 text-white rounded-2xl py-4 font-bold text-sm shadow-lg shadow-indigo-300 dark:shadow-indigo-900/30 flex items-center justify-center gap-2 border border-indigo-400/30 hover:shadow-xl transition-shadow"
         >
-          <Trophy size={18} />
+          <Trophy size={20} strokeWidth={2} />
           Demo: +10 XP verdienen
         </motion.button>
       </motion.div>
