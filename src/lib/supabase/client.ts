@@ -8,7 +8,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, SupabaseError } from './types';
-import { supabaseConfig, validateSupabaseConfig } from './config';
+import { supabaseConfig, isSupabaseConfigured, validateSupabaseConfig } from './config';
 
 let supabaseInstance: SupabaseClient<Database> | null = null;
 
@@ -61,6 +61,28 @@ export function getSupabase(): SupabaseClient<Database> {
     return initializeSupabase();
   }
   return supabaseInstance;
+}
+
+/**
+ * Safe Supabase client accessor that returns null when config is missing.
+ */
+export function getSupabaseOrNull(): SupabaseClient<Database> | null {
+  if (supabaseInstance) {
+    return supabaseInstance;
+  }
+
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  return initializeSupabase();
+}
+
+/**
+ * Indicates whether Supabase is available in the current environment.
+ */
+export function isSupabaseAvailable(): boolean {
+  return isSupabaseConfigured();
 }
 
 /**

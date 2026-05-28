@@ -12,20 +12,19 @@ export const supabaseConfig = {
 };
 
 /**
+ * Check whether Supabase is configured for the current environment.
+ */
+export function isSupabaseConfigured(): boolean {
+  return Boolean(supabaseConfig.url && supabaseConfig.anonKey)
+}
+
+/**
  * Validate that required environment variables are set
  */
 export function validateSupabaseConfig(): void {
-  if (!supabaseConfig.url) {
+  if (!isSupabaseConfigured()) {
     throw new Error(
-      'Missing VITE_SUPABASE_URL environment variable. ' +
-      'Please add it to your .env file.'
-    );
-  }
-
-  if (!supabaseConfig.anonKey) {
-    throw new Error(
-      'Missing VITE_SUPABASE_ANON_KEY environment variable. ' +
-      'Please add it to your .env file.'
-    );
+      'Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.'
+    )
   }
 }

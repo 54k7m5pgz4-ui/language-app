@@ -5,7 +5,7 @@
  * Handles user authentication, session management, and profile updates
  */
 
-import { getSupabase } from '../supabase/client';
+import { getSupabaseOrNull, isSupabaseAvailable } from '../supabase/client';
 import type { AuthUser } from '@supabase/supabase-js';
 import {
   AuthError,
@@ -33,8 +33,6 @@ import {
   getSessionTimeRemaining,
   type AuthSession,
 } from './authStorage';
-
-const supabase = getSupabase() as any;
 
 /**
  * User profile interface
@@ -65,6 +63,22 @@ export class AuthService {
     this.setupAutoRefresh();
   }
 
+  private getSupabaseClient() {
+    const client = getSupabaseOrNull()
+    if (!client) {
+      throw new AuthError(
+        'UNKNOWN_ERROR',
+        'Supabase ist noch nicht konfiguriert. Bitte fügen Sie VITE_SUPABASE_URL und VITE_SUPABASE_ANON_KEY zu Ihrer .env-Datei hinzu.',
+        'Supabase-Konfiguration fehlt'
+      )
+    }
+    return client
+  }
+
+  static isSupabaseConfigured(): boolean {
+    return isSupabaseAvailable()
+  }
+
   /**
    * Sign up a new user
    */
@@ -83,7 +97,7 @@ export class AuthService {
       validateFullName(normalizedName);
 
       // Sign up with Supabase
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await this.getSupabaseClient().auth.signUp({
         email: normalizedEmail,
         password,
         options: {
@@ -138,7 +152,7 @@ export class AuthService {
         throw new InvalidCredentialsError('Passwort ist erforderlich');
       }
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await this.getSupabaseClient().auth.signInWithPassword({
         email: normalizedEmail,
         password,
       });
@@ -177,7 +191,7 @@ export class AuthService {
       clearRememberedEmail();
 
       // Sign out from Supabase
-      const { error } = await supabase.auth.signOut();
+      const { error } = await this.getSupabaseClient().auth.signOut();
 
       if (error) {
         console.error('Supabase sign out error:', error);
@@ -229,7 +243,7 @@ export class AuthService {
         throw new NoActiveSessionError();
       }
 
-      const { data, error } = await supabase.auth.refreshSession({
+      const { data, error } = await this.getSupabaseClient().auth.refreshSession({
         refresh_token: session.refreshToken,
       });
 
@@ -261,7 +275,7 @@ export class AuthService {
       const normalizedEmail = normalizeEmail(email);
       validateEmail(normalizedEmail);
 
-      const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+      const { error } = await this.getSupabaseClient().auth.resetPasswordForEmail(normalizedEmail, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
 
@@ -297,7 +311,7 @@ export class AuthService {
         throw new NoActiveSessionError();
       }
 
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await this.getSupabaseClient().auth.signInWithPassword({
         email: session.user.email,
         password: oldPassword,
       });
@@ -307,7 +321,7 @@ export class AuthService {
       }
 
       // Update password
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await this.getSupabaseClient().auth.updateUser({
         password: newPassword,
       });
 
@@ -332,11 +346,13 @@ export class AuthService {
         throw new NoActiveSessionError();
       }
 
+      const client = this.getSupabaseClient() as any
+
       validateProfileUpdate(updates);
 
       // Update user table fields
       if (updates.fullName !== undefined) {
-        await supabase
+        await client
           .from('users')
           .update({ full_name: updates.fullName } as unknown)
           .eq('id', session.user.id)
@@ -363,7 +379,7 @@ export class AuthService {
       }
 
       if (Object.keys(profileUpdates).length > 0) {
-        await supabase
+        await client
           .from('profiles')
           .update(profileUpdates as unknown)
           .eq('user_id', session.user.id)
@@ -413,8 +429,10 @@ export class AuthService {
     fullName: string
   ): Promise<UserProfile> {
     try {
+      const client = this.getSupabaseClient() as any
+
       // Create user record in users table
-      await supabase
+      await client
         .from('users')
         .insert({
           id: userId,
@@ -425,7 +443,7 @@ export class AuthService {
         .single();
 
       // Create profile record in profiles table
-      const { data: profileData } = await supabase
+      const { data: profileData } = await client
         .from('profiles')
         .insert({
           user_id: userId,
@@ -458,15 +476,17 @@ export class AuthService {
    */
   private async getUserProfile(userId: string): Promise<UserProfile> {
     try {
+      const client = this.getSupabaseClient() as any
+
       // Get user record
-      const { data: userData } = await supabase
+      const { data: userData } = await client
         .from('users')
         .select('*')
         .eq('id', userId)
         .single();
 
       // Get profile record
-      const { data: profileData } = await supabase
+      const { data: profileData } = await client
         .from('profiles')
         .select('*')
         .eq('user_id', userId)

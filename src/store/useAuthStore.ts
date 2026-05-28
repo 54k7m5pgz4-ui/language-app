@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { getAuthService } from '../lib/auth'
-import { getSupabase } from '../lib/supabase/client'
+import { getSupabaseOrNull, isSupabaseAvailable } from '../lib/supabase/client'
 import { useProgressStore } from './useProgressStore'
 import type { UserProfile } from '../lib/auth/authService'
 import type { ProfileValidationRules } from '../lib/auth/authValidation'
@@ -14,6 +14,7 @@ interface AuthStore {
   initialized: boolean
   status: string | null
   lastSyncedAt: string | null
+  supabaseConfigured: boolean
   signIn: (email: string, password: string, rememberMe?: boolean) => Promise<UserProfile>
   signUp: (email: string, password: string, fullName: string) => Promise<UserProfile>
   signOut: () => Promise<void>
@@ -49,6 +50,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   initialized: false,
   status: null,
   lastSyncedAt: null,
+  supabaseConfigured: isSupabaseAvailable(),
 
   initializeAuth: async () => {
     set({ loading: true, status: 'Authentifizierung prüfen...' })
@@ -132,11 +134,16 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       return
     }
 
+    const client = getSupabaseOrNull() as any
+    if (!client) {
+      set({ status: 'Supabase ist lokal nicht konfiguriert. Cloud-Sync übersprungen.' })
+      return
+    }
+
     set({ loading: true, status: 'Cloud-Sync läuft...' })
 
     try {
       const progressState = useProgressStore.getState()
-      const client = getSupabase() as any
 
       // Ensure user and profile records exist
       await client.from('users').upsert(

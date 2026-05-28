@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Mail, Key } from 'lucide-react'
 import { getAuthService } from '../../lib/auth'
 import { useAuthStore } from '../../store/useAuthStore'
+import { isSupabaseAvailable } from '../../lib/supabase/client'
 import { useToast } from '../../components/ToastProvider'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
@@ -12,6 +13,7 @@ export default function Login() {
   const location = useLocation()
   const { signIn, isAuthenticated, initialized, loading, status } = useAuthStore()
   const rememberedEmail = getAuthService().getRememberedEmail() ?? ''
+  const supabaseAvailable = isSupabaseAvailable()
 
   const from = (location.state as { from?: string })?.from || '/'
   const [email, setEmail] = useState(rememberedEmail)
@@ -49,6 +51,11 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 shadow-lg rounded-3xl p-6 border border-slate-200 dark:border-slate-800 space-y-4">
+          {!supabaseAvailable && (
+            <div className="rounded-2xl border border-amber-300/80 bg-amber-50/80 p-4 text-sm text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
+              Supabase ist lokal nicht konfiguriert. Ohne VITE_SUPABASE_URL und VITE_SUPABASE_ANON_KEY ist Cloud-Anmeldung deaktiviert.
+            </div>
+          )}
           <Input
             label="E-Mail"
             type="email"
@@ -85,7 +92,7 @@ export default function Login() {
           {error && <p className="text-sm text-red-500">{error}</p>}
           {status && !error && <p className="text-sm text-slate-500 dark:text-slate-400">{status}</p>}
 
-          <Button type="submit" fullWidth isLoading={loading}>
+          <Button type="submit" fullWidth isLoading={loading} disabled={!supabaseAvailable}>
             Anmelden
           </Button>
         </form>
