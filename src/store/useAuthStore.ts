@@ -53,13 +53,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   supabaseConfigured: isSupabaseAvailable(),
 
   initializeAuth: async () => {
-    set({ loading: true, status: 'Authentifizierung prüfen...' })
+    set({ loading: true, status: 'Authentifizierung prüfen...', supabaseConfigured: isSupabaseAvailable() })
 
     try {
       const user = await authService.getCurrentUser()
       set({ user, isAuthenticated: !!user, initialized: true, status: null })
 
-      if (user) {
+      if (user && isSupabaseAvailable()) {
         await get().syncCloud()
       }
     } catch (error) {
@@ -129,14 +129,22 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   syncCloud: async () => {
     const user = get().user
+    const configured = isSupabaseAvailable()
+    set({ supabaseConfigured: configured })
+
     if (!user) {
       set({ status: 'Kein angemeldeter Nutzer zum Synchronisieren' })
       return
     }
 
+    if (!configured) {
+      set({ status: 'Supabase ist lokal nicht konfiguriert. Cloud-Sync ist deaktiviert.' })
+      return
+    }
+
     const client = getSupabaseOrNull() as any
     if (!client) {
-      set({ status: 'Supabase ist lokal nicht konfiguriert. Cloud-Sync übersprungen.' })
+      set({ status: 'Supabase-Client konnte nicht initialisiert werden. Bitte prüfe die Konfiguration.' })
       return
     }
 

@@ -190,12 +190,13 @@ export class AuthService {
       clearSession();
       clearRememberedEmail();
 
-      // Sign out from Supabase
-      const { error } = await this.getSupabaseClient().auth.signOut();
+      if (AuthService.isSupabaseConfigured()) {
+        const { error } = await this.getSupabaseClient().auth.signOut();
 
-      if (error) {
-        console.error('Supabase sign out error:', error);
-        // Don't throw - session is already cleared
+        if (error) {
+          console.error('Supabase sign out error:', error);
+          // Don't throw - session is already cleared
+        }
       }
 
       // Clear session check interval
@@ -216,6 +217,14 @@ export class AuthService {
       const session = getSession();
       if (!session) {
         return null;
+      }
+
+      if (!AuthService.isSupabaseConfigured()) {
+        return {
+          id: session.user.id,
+          email: session.user.email,
+          fullName: session.user.fullName,
+        };
       }
 
       return await this.getUserProfile(session.user.id);
@@ -241,6 +250,10 @@ export class AuthService {
       const session = getSession();
       if (!session) {
         throw new NoActiveSessionError();
+      }
+
+      if (!AuthService.isSupabaseConfigured()) {
+        return session;
       }
 
       const { data, error } = await this.getSupabaseClient().auth.refreshSession({
