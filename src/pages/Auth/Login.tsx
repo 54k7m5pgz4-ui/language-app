@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Mail, Key } from 'lucide-react'
 import { getAuthService } from '../../lib/auth'
 import { useAuthStore } from '../../store/useAuthStore'
+import { useToast } from '../../components/ToastProvider'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
 
@@ -22,14 +23,19 @@ export default function Login() {
     return <Navigate to="/" replace />
   }
 
+  const { notify } = useToast()
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError(null)
     try {
       await signIn(email, password, rememberMe)
+      notify('Anmeldung erfolgreich. Willkommen zurück!', 'success')
       navigate(from, { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Fehler bei der Anmeldung')
+      const message = err instanceof Error ? err.message : 'Fehler bei der Anmeldung'
+      setError(message)
+      notify(message, 'error')
     }
   }
 

@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Moon, Sun, Globe, Target, Zap, UserCircle, Cloud, LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -12,6 +13,16 @@ export default function More() {
   const { isDarkMode, toggleDarkMode } = useUserStore()
   const { xp, streak, totalWordsLearned, lessonsCompleted } = useProgressStore()
   const { user, loading, status, lastSyncedAt, syncCloud, signOut } = useAuthStore()
+
+  const progressSummary = useMemo(
+    () => [
+      { label: 'XP', value: xp },
+      { label: 'Serie', value: `${streak}🔥` },
+      { label: 'Wörter', value: totalWordsLearned },
+      { label: 'Lektionen', value: lessonsCompleted.length },
+    ],
+    [xp, streak, totalWordsLearned, lessonsCompleted.length],
+  )
 
   return (
     <div className="px-4 pt-4 pb-28 space-y-4">
@@ -28,12 +39,7 @@ export default function More() {
       >
         <p className="text-indigo-200 text-xs font-medium mb-3">Mein Fortschritt</p>
         <div className="grid grid-cols-4 gap-2">
-          {[
-            { label: 'XP', value: xp },
-            { label: 'Serie', value: `${streak}🔥` },
-            { label: 'Wörter', value: totalWordsLearned },
-            { label: 'Lektionen', value: lessonsCompleted.length },
-          ].map(s => (
+          {progressSummary.map(s => (
             <div key={s.label} className="text-center">
               <div className="text-lg font-bold">{s.value}</div>
               <div className="text-indigo-200 text-[10px]">{s.label}</div>

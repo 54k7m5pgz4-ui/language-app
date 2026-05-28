@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Mail, Key, User } from 'lucide-react'
 import { useAuthStore } from '../../store/useAuthStore'
+import { useToast } from '../../components/ToastProvider'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
 
@@ -17,15 +18,20 @@ export default function Register() {
     return <Navigate to="/" replace />
   }
 
+  const { notify } = useToast()
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError(null)
 
     try {
       await signUp(email, password, fullName)
+      notify('Konto erfolgreich erstellt! Wir starten mit dem Onboarding.', 'success')
       navigate('/onboarding', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Fehler bei der Registrierung')
+      const message = err instanceof Error ? err.message : 'Fehler bei der Registrierung'
+      setError(message)
+      notify(message, 'error')
     }
   }
 
