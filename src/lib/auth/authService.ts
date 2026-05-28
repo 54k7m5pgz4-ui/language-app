@@ -34,8 +34,7 @@ import {
   type AuthSession,
 } from './authStorage';
 
-// Cast supabase to any to bypass type issues with Database types
-const supabase = getSupabase() as unknown as Record<string, unknown>;
+const supabase = getSupabase() as any;
 
 /**
  * User profile interface

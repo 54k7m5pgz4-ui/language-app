@@ -3,7 +3,7 @@ import { forwardRef } from 'react'
 import { motion } from 'framer-motion'
 import { buttonPressAnimation } from '../../lib/animations'
 
-interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> {
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'ghost' | 'outline'
   size?: 'sm' | 'md' | 'lg'

@@ -1,12 +1,17 @@
 import { motion } from 'framer-motion'
-import { Moon, Sun, Globe, Target, Zap } from 'lucide-react'
+import { Moon, Sun, Globe, Target, Zap, UserCircle, Cloud, LogOut } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useUserStore } from '../../store/useUserStore'
 import { useProgressStore } from '../../store/useProgressStore'
+import { useAuthStore } from '../../store/useAuthStore'
 import { APP_CONFIG } from '../../config/appConfig'
+import Button from '../../components/ui/Button'
 
 export default function More() {
+  const navigate = useNavigate()
   const { isDarkMode, toggleDarkMode } = useUserStore()
   const { xp, streak, totalWordsLearned, lessonsCompleted } = useProgressStore()
+  const { user, loading, status, lastSyncedAt, syncCloud, signOut } = useAuthStore()
 
   return (
     <div className="px-4 pt-4 pb-28 space-y-4">
@@ -68,6 +73,47 @@ export default function More() {
         </button>
       </motion.div>
 
+      {/* Account */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.08 }}
+        className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700/60 shadow-sm"
+      >
+        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-sm text-slate-700 dark:text-slate-300">Konto</h3>
+            <p className="text-xs text-slate-400 dark:text-slate-500">Deine Persistenz & Cloud-Synchronisation</p>
+          </div>
+          <UserCircle size={18} className="text-indigo-500" />
+        </div>
+        <div className="px-4 py-4 space-y-4">
+          <div className="rounded-3xl bg-slate-50 dark:bg-slate-950/70 p-4 border border-slate-100 dark:border-slate-700/60">
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">{user?.fullName ?? user?.email}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{user?.email}</p>
+          </div>
+          <div className="grid gap-3">
+            <Button fullWidth variant="outline" onClick={() => navigate('/profile')}>
+              Profil anzeigen
+            </Button>
+            <Button fullWidth variant="ghost" onClick={() => navigate('/settings')}>
+              Einstellungen
+            </Button>
+            <Button fullWidth variant="secondary" onClick={syncCloud} isLoading={loading}>
+              <Cloud size={16} /> Cloud-Sync
+            </Button>
+            <Button fullWidth variant="danger" onClick={async () => { await signOut(); navigate('/login') }}>
+              <LogOut size={16} /> Abmelden
+            </Button>
+          </div>
+          <div className="text-[11px] text-slate-500 dark:text-slate-400">
+            {status ? `Status: ${status}` : 'Cloud-Status aktuell'}
+            <br />
+            {lastSyncedAt ? `Zuletzt synchronisiert: ${new Date(lastSyncedAt).toLocaleString('de-DE')}` : 'Noch kein Synchronisationspunkt vorhanden'}
+          </div>
+        </div>
+      </motion.div>
+
       {/* Profile */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -79,10 +125,10 @@ export default function More() {
           <h3 className="font-semibold text-sm text-slate-700 dark:text-slate-300">Lernprofil</h3>
         </div>
         {[
-          { icon: Globe, label: 'Zielsprache', value: APP_CONFIG.targetLanguage },
-          { icon: Target, label: 'Level', value: APP_CONFIG.level },
-          { icon: Target, label: 'Lernziel', value: APP_CONFIG.goal },
-          { icon: Zap, label: 'Intensität', value: APP_CONFIG.intensity },
+          { icon: Globe, label: 'Zielsprache', value: user?.targetLanguage ?? APP_CONFIG.targetLanguage },
+          { icon: Target, label: 'Level', value: user?.currentLevel ?? APP_CONFIG.level },
+          { icon: Target, label: 'Lernziel', value: user?.learningGoal ?? APP_CONFIG.goal },
+          { icon: Zap, label: 'Intensität', value: user?.learningIntensity ?? APP_CONFIG.intensity },
         ].map((item, i, arr) => (
           <div
             key={item.label}
