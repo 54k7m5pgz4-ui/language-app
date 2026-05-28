@@ -35,7 +35,10 @@ Create `.env` file (copy from `.env.example`):
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 VITE_ANTHROPIC_API_KEY=your-claude-api-key
+VITE_ENABLE_ANALYTICS=false
 ```
+
+> **Wichtig:** Committe niemals echte API-Schlüssel. Nutze nur `.env.example` als Referenz.
 
 ### 3. Apply Database Schema
 
@@ -116,6 +119,35 @@ npm run preview
 # Run linting
 npm run lint
 ```
+
+## 📦 Vercel Deployment
+
+This app is configured for deployment on Vercel using `vercel.json` and the Vite static build output.
+
+1. Create a new Vercel project and connect your Git repository.
+2. Ensure the build command is set to:
+   ```bash
+   npm run build
+   ```
+3. Set the output directory to:
+   ```text
+   dist
+   ```
+4. Add the required environment variables in the Vercel dashboard:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_ANTHROPIC_API_KEY`
+   - `VITE_ENABLE_ANALYTICS` (optional, `false` by default)
+5. Deploy the project.
+
+### SPA Routing Support
+
+`vercel.json` contains a fallback route so client-side routing works for deep links and bookmarked pages. The offline page remains available at `/offline.html`.
+
+### PWA Support
+
+The app includes a PWA manifest and service worker via `vite-plugin-pwa`. The generated service worker precaches assets and serves `offline.html` when navigation fails while offline.
+
 
 ## 📝 Project Structure
 
