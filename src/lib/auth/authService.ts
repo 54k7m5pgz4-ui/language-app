@@ -12,6 +12,7 @@ import {
   InvalidCredentialsError,
   NoActiveSessionError,
   RefreshTokenFailedError,
+  UserAlreadyExistsError,
   mapSupabaseErrorToAuthError,
 } from './authErrors';
 import {
@@ -96,6 +97,33 @@ export class AuthService {
       validatePassword(password);
       validateFullName(normalizedName);
 
+      // If Supabase is not configured, use local fallback
+      if (!AuthService.isSupabaseConfigured()) {
+        // Local users stored in localStorage under 'local_users'
+        const raw = localStorage.getItem('local_users') || '[]'
+        const users = JSON.parse(raw) as Array<{ id: string; email: string; password: string; fullName?: string }>
+
+        if (users.find(u => u.email === normalizedEmail)) {
+          throw new UserAlreadyExistsError('Ein Konto mit dieser E-Mail existiert bereits')
+        }
+
+        const id = `local-${Date.now()}`
+        const newUser = { id, email: normalizedEmail, password: btoa(password), fullName: normalizedName }
+        users.push(newUser)
+        localStorage.setItem('local_users', JSON.stringify(users))
+
+        const authSession: AuthSession = {
+          accessToken: id,
+          refreshToken: '',
+          expiresAt: Date.now() + 1000 * 60 * 60 * 24, // 24h
+          user: { id, email: normalizedEmail, fullName: normalizedName },
+        }
+
+        saveSession(authSession, false)
+
+        return { user: { id, email: normalizedEmail, fullName: normalizedName }, session: authSession }
+      }
+
       // Sign up with Supabase
       const { data, error } = await this.getSupabaseClient().auth.signUp({
         email: normalizedEmail,
@@ -150,6 +178,31 @@ export class AuthService {
 
       if (!password) {
         throw new InvalidCredentialsError('Passwort ist erforderlich');
+      }
+
+      // Local fallback when Supabase isn't configured
+      if (!AuthService.isSupabaseConfigured()) {
+        const raw = localStorage.getItem('local_users') || '[]'
+        const users = JSON.parse(raw) as Array<{ id: string; email: string; password: string; fullName?: string }>
+        const found = users.find(u => u.email === normalizedEmail)
+        if (!found) {
+          throw new InvalidCredentialsError('Benutzer nicht gefunden')
+        }
+
+        if (found.password !== btoa(password)) {
+          throw new InvalidCredentialsError('Ungültige Anmeldedaten')
+        }
+
+        const authSession: AuthSession = {
+          accessToken: found.id,
+          refreshToken: '',
+          expiresAt: Date.now() + 1000 * 60 * 60 * 24,
+          user: { id: found.id, email: found.email, fullName: found.fullName },
+        }
+
+        saveSession(authSession, rememberMe)
+
+        return { user: { id: found.id, email: found.email, fullName: found.fullName }, session: authSession }
       }
 
       const { data, error } = await this.getSupabaseClient().auth.signInWithPassword({

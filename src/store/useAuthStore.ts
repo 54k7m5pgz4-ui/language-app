@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { getAuthService } from '../lib/auth'
 import { getSupabaseOrNull, isSupabaseAvailable } from '../lib/supabase/client'
 import { useProgressStore } from './useProgressStore'
+import { db } from '../lib/db'
 import type { UserProfile } from '../lib/auth/authService'
 import type { ProfileValidationRules } from '../lib/auth/authValidation'
 import type { Progress } from '../types'
@@ -208,6 +209,63 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         },
         { onConflict: 'user_id' }
       )
+
+      // Vocab sync: push local cards and custom decks to Supabase, then pull remote cards and merge
+      try {
+        const allLocalCards = await db.cards.toArray()
+        const allCustomMeta = await db.customDecks.toArray()
+
+        // Upsert local cards
+        if (allLocalCards.length > 0) {
+          const payload = allLocalCards.map(c => ({
+            id: c.id,
+            user_id: user.id,
+            deck: c.deck,
+            word: c.word,
+            translation: c.translation,
+            pronunciation: c.pronunciation || null,
+            is_favorite: c.isFavorite || false,
+            is_learned: c.isLearned || false,
+            next_review: c.nextReview || null,
+            interval: c.interval || 0,
+            repetitions: c.repetitions || 0,
+            ease_factor: c.easeFactor || 0,
+          }))
+
+          await client.from('vocab_cards').upsert(payload, { onConflict: 'id' })
+        }
+
+        // Upsert custom deck metadata
+        if (allCustomMeta.length > 0) {
+          const deckPayload = allCustomMeta.map(d => ({ id: d.id, user_id: user.id, label: d.label, emoji: d.emoji, created_at: d.createdAt }))
+          await client.from('vocab_decks').upsert(deckPayload, { onConflict: 'id' })
+        }
+
+        // Pull remote cards and merge into local DB
+        const { data: remoteCards } = await client.from('vocab_cards').select('*').eq('user_id', user.id)
+        if (Array.isArray(remoteCards)) {
+          const localIds = new Set((await db.cards.toArray()).map(c => c.id))
+          const toInsert = remoteCards.filter((rc: any) => !localIds.has(rc.id)).map((rc: any) => ({
+            id: rc.id,
+            deck: rc.deck,
+            word: rc.word || rc.front || '',
+            translation: rc.translation || rc.back || '',
+            pronunciation: rc.pronunciation || '',
+            interval: rc.interval || 0,
+            repetitions: rc.repetitions || 0,
+            easeFactor: rc.ease_factor || 0,
+            nextReview: rc.next_review || null,
+            isFavorite: rc.is_favorite || false,
+            isLearned: rc.is_learned || false,
+          }))
+
+          if (toInsert.length > 0) {
+            await db.cards.bulkAdd(toInsert as any)
+          }
+        }
+      } catch (err) {
+        console.warn('Vokabel-Sync fehlgeschlagen:', err)
+      }
 
       set({ lastSyncedAt: new Date().toISOString(), status: 'Cloud-Sync abgeschlossen' })
     } catch (error) {

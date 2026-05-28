@@ -92,7 +92,7 @@ export default function Login() {
           {error && <p className="text-sm text-red-500">{error}</p>}
           {status && !error && <p className="text-sm text-slate-500 dark:text-slate-400">{status}</p>}
 
-          <Button type="submit" fullWidth isLoading={loading} disabled={!supabaseAvailable}>
+          <Button type="submit" fullWidth isLoading={loading}>
             Anmelden
           </Button>
         </form>

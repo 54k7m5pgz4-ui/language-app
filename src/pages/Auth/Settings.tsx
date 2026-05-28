@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Settings2, Save, ChevronLeft } from 'lucide-react'
 import { useAuthStore } from '../../store/useAuthStore'
+import { isSupabaseAvailable } from '../../lib/supabase/client'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
 
@@ -143,6 +144,16 @@ export default function Settings() {
         {status && <p className="text-sm text-slate-500 dark:text-slate-400">{status}</p>}
 
         <div className="grid gap-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold">Cloud-Sync</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Supabase-Status: {isSupabaseAvailable() ? 'Konfiguriert' : 'Nicht konfiguriert'}</p>
+            </div>
+            <label className="inline-flex items-center gap-2">
+              <input type="checkbox" checked={isSupabaseAvailable()} readOnly className="h-4 w-4 rounded border-slate-300 text-indigo-600" />
+            </label>
+          </div>
+
           <Button type="submit" fullWidth icon={<Save size={18} />} isLoading={loading}>
             Änderungen speichern
           </Button>
