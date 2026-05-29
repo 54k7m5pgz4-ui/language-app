@@ -22,7 +22,7 @@ export function UserProgress() {
       const supabase = getSupabase();
       const { data, error } = await executeSupabaseQuery(
         () => supabase
-          .from('user_progress')
+          .from('progress')
           .select('*')
           .eq('user_id', 'current-user-id')
           .single(),
@@ -66,7 +66,7 @@ export function RealtimeProgress() {
 
   useEffect(() => {
     const subscription = subscribeToTable(
-      'user_progress',
+      'progress',
       (payload) => {
         console.log('Real-time update:', payload);
         setUpdates(prev => [...prev, payload]);
@@ -136,7 +136,7 @@ async function updateDailyStreak(userId: string, newStreak: number) {
   const supabase = getSupabase();
   const { data, error } = await executeSupabaseQuery(
     () => supabase
-      .from('user_progress')
+      .from('progress')
       .update({
         daily_streak: newStreak,
         last_activity_date: new Date().toISOString().split('T')[0],
@@ -169,7 +169,7 @@ async function robustQuery(userId: string) {
   try {
     const { data, error } = await executeSupabaseQuery(
       () => supabase
-        .from('user_progress')
+        .from('progress')
         .select('*')
         .eq('user_id', userId)
         .single(),
@@ -220,7 +220,7 @@ export const useProgressStore = create<ProgressState>((set) => ({
     const supabase = getSupabase();
     const { data, error } = await executeSupabaseQuery(
       () => supabase
-        .from('user_progress')
+        .from('progress')
         .select('*')
         .eq('user_id', userId)
         .single(),
@@ -268,13 +268,13 @@ Example with proper typing:
 import { getSupabase, executeSupabaseQuery } from '@/lib/supabase';
 import type { Database } from '@/lib/supabase/types';
 
-type UserProgress = Database['public']['Tables']['user_progress']['Row'];
+type UserProgress = Database['public']['Tables']['progress']['Row'];
 
 async function getTypedProgress(userId: string): Promise<UserProgress | null> {
   const supabase = getSupabase();
   const { data, error } = await executeSupabaseQuery(
     () => supabase
-      .from('user_progress')
+      .from('progress')
       .select('*')
       .eq('user_id', userId)
       .single(),

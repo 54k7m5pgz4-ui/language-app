@@ -125,7 +125,7 @@ const { data, error } = await executeSupabaseQuery(
    - Provides full type-safety for all queries
 
 3. **Create data access layer** (optional)
-   - Build service modules for user_progress, vocabulary, etc.
+   - Build service modules for progress, vocabulary, etc.
    - Centralize all database logic
 
 4. **Implement authentication** (optional)

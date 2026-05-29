@@ -53,7 +53,7 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 shadow-lg rounded-3xl p-6 border border-slate-200 dark:border-slate-800 space-y-4">
           {!supabaseAvailable && (
             <div className="rounded-2xl border border-amber-300/80 bg-amber-50/80 p-4 text-sm text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
-              Supabase ist lokal nicht konfiguriert. Ohne VITE_SUPABASE_URL und VITE_SUPABASE_ANON_KEY ist Cloud-Anmeldung deaktiviert.
+              Supabase ist nicht konfiguriert. Lokale Anmeldung funktioniert weiterhin, aber Cloud-Sync ist deaktiviert.
             </div>
           )}
           <Input

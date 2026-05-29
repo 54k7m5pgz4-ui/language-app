@@ -273,14 +273,28 @@ export class AuthService {
       }
 
       if (!AuthService.isSupabaseConfigured()) {
+        const rawProfiles = localStorage.getItem('local_profiles') || '{}'
+        const profiles = JSON.parse(rawProfiles) as Record<string, Partial<UserProfile>>
+        const profile = profiles[session.user.id] || {}
+
         return {
           id: session.user.id,
           email: session.user.email,
           fullName: session.user.fullName,
+          nativeLanguage: profile.nativeLanguage,
+          targetLanguage: profile.targetLanguage,
+          currentLevel: profile.currentLevel,
+          learningGoal: profile.learningGoal,
+          learningIntensity: profile.learningIntensity,
         };
       }
 
-      return await this.getUserProfile(session.user.id);
+      const { data, error } = await this.getSupabaseClient().auth.getSession();
+      if (error || !data.session?.user) {
+        return await this.getUserProfile(session.user.id);
+      }
+
+      return await this.getUserProfile(data.session.user.id);
     } catch (error) {
       console.error('Get current user error:', error);
       return null;
@@ -371,10 +385,26 @@ export class AuthService {
         throw new Error('Neues Passwort darf nicht dem alten Passwort entsprechen');
       }
 
-      // Verify old password by attempting sign in
       const session = getSession();
       if (!session) {
         throw new NoActiveSessionError();
+      }
+
+      if (!AuthService.isSupabaseConfigured()) {
+        const raw = localStorage.getItem('local_users') || '[]'
+        const users = JSON.parse(raw) as Array<{ id: string; email: string; password: string; fullName?: string }>
+        const found = users.find(u => u.id === session.user.id)
+        if (!found) {
+          throw new InvalidCredentialsError('Benutzer nicht gefunden');
+        }
+
+        if (found.password !== btoa(oldPassword)) {
+          throw new InvalidCredentialsError('Altes Passwort ist falsch');
+        }
+
+        found.password = btoa(newPassword)
+        localStorage.setItem('local_users', JSON.stringify(users))
+        return
       }
 
       const { error: signInError } = await this.getSupabaseClient().auth.signInWithPassword({
@@ -412,9 +442,60 @@ export class AuthService {
         throw new NoActiveSessionError();
       }
 
-      const client = this.getSupabaseClient() as any
-
       validateProfileUpdate(updates);
+
+      if (!AuthService.isSupabaseConfigured()) {
+        const rawUsers = localStorage.getItem('local_users') || '[]'
+        const users = JSON.parse(rawUsers) as Array<{ id: string; email: string; password: string; fullName?: string }>
+        const rawProfiles = localStorage.getItem('local_profiles') || '{}'
+        const profiles = JSON.parse(rawProfiles) as Record<string, Partial<UserProfile>>
+
+        const user = users.find(u => u.id === session.user.id)
+        if (!user) {
+          throw new NoActiveSessionError();
+        }
+
+        if (updates.fullName !== undefined) {
+          user.fullName = updates.fullName
+          session.user.fullName = updates.fullName
+        }
+
+        const profile = profiles[session.user.id] || {}
+        if (updates.nativeLanguage !== undefined) {
+          profile.nativeLanguage = updates.nativeLanguage
+        }
+        if (updates.targetLanguage !== undefined) {
+          profile.targetLanguage = updates.targetLanguage
+        }
+        if (updates.currentLevel !== undefined) {
+          profile.currentLevel = updates.currentLevel
+        }
+        if (updates.learningGoal !== undefined) {
+          profile.learningGoal = updates.learningGoal
+        }
+        if (updates.learningIntensity !== undefined) {
+          profile.learningIntensity = updates.learningIntensity
+        }
+
+        users.splice(users.findIndex(u => u.id === user.id), 1, user)
+        profiles[session.user.id] = profile
+        localStorage.setItem('local_users', JSON.stringify(users))
+        localStorage.setItem('local_profiles', JSON.stringify(profiles))
+        saveSession(session, !!localStorage.getItem('auth_remember_me'))
+
+        return {
+          id: user.id,
+          email: user.email,
+          fullName: user.fullName,
+          nativeLanguage: profile.nativeLanguage,
+          targetLanguage: profile.targetLanguage,
+          currentLevel: profile.currentLevel,
+          learningGoal: profile.learningGoal,
+          learningIntensity: profile.learningIntensity,
+        }
+      }
+
+      const client = this.getSupabaseClient() as any
 
       // Update user table fields
       if (updates.fullName !== undefined) {

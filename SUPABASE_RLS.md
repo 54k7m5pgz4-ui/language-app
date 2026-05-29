@@ -4,7 +4,7 @@ Diese Datei enthält empfohlene Row-Level-Security (RLS) Policies, Hinweise zur 
 
 ## Grundprinzip
 
-- Aktiviere RLS auf allen Tabellen, die benutzerspezifische Daten enthalten (z. B. `profiles`, `progress`, `vocab_cards`, `chat_history`).
+- Aktiviere RLS auf allen Tabellen, die benutzerspezifische Daten enthalten (z. B. `profiles`, `progress`, `vocabulary`, `chat_history`).
 - Policies sollten sicherstellen, dass `auth.uid()` mit `user_id` übereinstimmt.
 - Teste Policies mit mehreren Test-Benutzern, um sicherzustellen, dass keine unerwünschten Zugriffe möglich sind.
 
@@ -29,7 +29,7 @@ CREATE POLICY "Public read" ON public.lessons
 3) Erlauben, dass Authenticated Users eigene Reihen erstellen können:
 
 ```sql
-CREATE POLICY "Insert own rows" ON public.vocab_cards
+CREATE POLICY "Insert own rows" ON public.vocabulary
   FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 ```

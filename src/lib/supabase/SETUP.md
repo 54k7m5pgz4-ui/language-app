@@ -51,15 +51,17 @@
  * In Supabase dashboard, go to SQL Editor and run queries like:
  * 
  * -- User progress tracking
- * CREATE TABLE user_progress (
+ * CREATE TABLE progress (
  *   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
  *   user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
- *   language_code TEXT NOT NULL,
- *   xp_points INTEGER DEFAULT 0,
- *   current_level INTEGER DEFAULT 1,
- *   daily_streak INTEGER DEFAULT 0,
- *   last_activity_date DATE,
- *   created_at TIMESTAMPTZ DEFAULT now(),
+ *   xp INTEGER DEFAULT 0,
+ *   level INTEGER DEFAULT 1,
+ *   streak INTEGER DEFAULT 0,
+ *   daily_xp INTEGER DEFAULT 0,
+ *   last_active DATE,
+ *   week_xp INTEGER[] DEFAULT ARRAY[0,0,0,0,0,0,0],
+ *   total_words_learned INTEGER DEFAULT 0,
+ *   total_lessons_completed INTEGER DEFAULT 0,
  *   updated_at TIMESTAMPTZ DEFAULT now()
  * );
  * 
@@ -67,10 +69,17 @@
  * CREATE TABLE vocabulary (
  *   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
  *   user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
- *   word_id uuid,
+ *   lesson_id TEXT,
+ *   word TEXT NOT NULL,
+ *   translation TEXT NOT NULL,
+ *   language TEXT NOT NULL,
+ *   pronunciation TEXT,
+ *   example_sentence TEXT,
+ *   is_favorited BOOLEAN DEFAULT FALSE,
  *   is_learned BOOLEAN DEFAULT FALSE,
- *   times_reviewed INTEGER DEFAULT 0,
+ *   repetition_count INTEGER DEFAULT 0,
  *   last_reviewed TIMESTAMPTZ,
+ *   next_review TIMESTAMPTZ,
  *   created_at TIMESTAMPTZ DEFAULT now(),
  *   updated_at TIMESTAMPTZ DEFAULT now()
  * );
@@ -88,7 +97,7 @@
  *   const supabase = getSupabase();
  *   const { data, error } = await executeSupabaseQuery(
  *     () => supabase
- *       .from('user_progress')
+ *       .from('progress')
  *       .select('*')
  *       .single(),
  *     'fetchUserProgress'
@@ -113,7 +122,7 @@
  * 
  * useEffect(() => {
  *   const subscription = subscribeToTable(
- *     'user_progress',
+ *     'progress',
  *     (payload) => {
  *       console.log('Update:', payload);
  *       // Update your component state
