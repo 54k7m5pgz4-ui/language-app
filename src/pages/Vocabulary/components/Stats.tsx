@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 
 export default function Stats() {
   const { getAllStats } = useVocabStore()
-  const { xp, level } = useProgressStore()
+  const { xp, level, reviewHistory } = useProgressStore()
 
   const [stats, setStats] = useState({
     totalCards: 0,
@@ -21,6 +21,9 @@ export default function Stats() {
     }
     load()
   }, [getAllStats])
+
+  const mistakes = reviewHistory.filter((item) => !item.correct).length
+  const reviews = reviewHistory.length
 
   const statItems = [
     {
@@ -50,6 +53,20 @@ export default function Stats() {
       value: stats.totalDue,
       color: 'from-green-500 to-emerald-500',
       emoji: '🏆',
+    },
+    {
+      icon: BookOpen,
+      label: 'Letzte Reviews',
+      value: reviews,
+      color: 'from-slate-500 to-slate-600',
+      emoji: '🧠',
+    },
+    {
+      icon: Target,
+      label: 'Fehler zuletzt',
+      value: mistakes,
+      color: 'from-rose-500 to-pink-500',
+      emoji: '⚠️',
     },
   ]
 

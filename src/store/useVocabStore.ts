@@ -15,6 +15,7 @@ interface VocabStore {
   getFavoritesCards: () => Promise<VocabCard[]>
   getDeckStats: (deckId: string) => Promise<{ total: number; learned: number; due: number; favorites: number }>
   getAllStats: () => Promise<{ totalCards: number; totalLearned: number; totalDue: number }>
+  getTopDueDecks: () => Promise<Array<{ deckId: string; label: string; emoji: string; total: number; due: number }>>
   createCustomDeck: (topic: string, cards: VocabCard[]) => Promise<void>
 }
 
@@ -104,6 +105,35 @@ export const useVocabStore = create<VocabStore>()(
           totalLearned: learned,
           totalDue: due,
         }
+      },
+
+      getTopDueDecks: async () => {
+        const allCards = await db.cards.toArray()
+        const customMeta = await db.customDecks.toArray()
+        const customMap: Record<string, { label: string; emoji: string }> = {}
+        customMeta.forEach(m => {
+          customMap[m.id] = { label: m.label, emoji: m.emoji }
+        })
+
+        const byDeck: Record<string, { label: string; emoji: string; total: number; due: number }> = {}
+
+        allCards.forEach(card => {
+          if (!byDeck[card.deck]) {
+            const builtIn = VOCAB_DECKS.find(d => d.id === card.deck)
+            byDeck[card.deck] = {
+              label: customMap[card.deck]?.label || builtIn?.label || card.deck,
+              emoji: customMap[card.deck]?.emoji || builtIn?.emoji || '📘',
+              total: 0,
+              due: 0,
+            }
+          }
+          byDeck[card.deck].total += 1
+          if (isDue(card.nextReview)) byDeck[card.deck].due += 1
+        })
+
+        return Object.entries(byDeck)
+          .map(([deckId, data]) => ({ deckId, ...data }))
+          .sort((a, b) => b.due - a.due || b.total - a.total)
       },
 
       createCustomDeck: async (topic: string, cards: VocabCard[]) => {

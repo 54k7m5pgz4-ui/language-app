@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft, Trash2, Volume2, VolumeX, Gauge, ChevronDown,
@@ -16,21 +17,42 @@ import type { ChatMessage } from '../../types'
 
 /* ── API key missing screen ── */
 function NoApiKey() {
+  const navigate = useNavigate()
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center gap-4">
-      <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center text-3xl">🔑</div>
-      <h3 className="text-lg font-bold text-slate-900 dark:text-white">API-Key fehlt</h3>
-      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs">
-        Erstelle eine <code className="bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded text-xs">.env</code> Datei im Projektordner mit:
-      </p>
-      <div className="bg-slate-900 dark:bg-slate-700 rounded-xl p-3 text-left w-full max-w-xs">
-        <code className="text-emerald-400 text-xs font-mono">
-          VITE_ANTHROPIC_API_KEY=sk-ant-…
-        </code>
+      <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] flex items-center justify-center text-4xl shadow-lg shadow-slate-200 dark:shadow-slate-900">
+        🔒
       </div>
-      <p className="text-xs text-slate-400 dark:text-slate-500">
-        API-Keys bekommst du auf{' '}
-        <span className="text-indigo-500">console.anthropic.com</span>
+      <h3 className="text-xl font-bold text-slate-900 dark:text-white">Der KI-Tutor ist derzeit deaktiviert</h3>
+      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-md">
+        Der Claude API-Key ist nicht konfiguriert. Sobald du ihn in deiner <code className="bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded text-xs">.env</code> Datei hinterlegst,
+        steht dir der Tutor wieder vollumfänglich zur Verfügung.
+      </p>
+      <div className="bg-slate-950/95 dark:bg-slate-800/80 rounded-3xl p-4 text-left w-full max-w-md border border-slate-200/50 dark:border-slate-700">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400 mb-2">Schnellstart</p>
+        <pre className="bg-slate-900 text-emerald-400 text-xs rounded-2xl p-3 overflow-x-auto">
+          VITE_ANTHROPIC_API_KEY=sk-ant-…
+        </pre>
+      </div>
+      <div className="grid gap-3 w-full max-w-xs">
+        <button
+          type="button"
+          onClick={() => navigate('/vocab')}
+          className="rounded-3xl bg-indigo-600 text-white py-3 font-semibold shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 transition-colors"
+        >
+          Vokabeltrainer öffnen
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="rounded-3xl border border-slate-200 dark:border-slate-700 py-3 font-semibold text-slate-700 dark:text-slate-200 bg-white/90 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        >
+          Zurück zur Startseite
+        </button>
+      </div>
+      <p className="text-xs text-slate-400 dark:text-slate-500 mt-3 max-w-sm">
+        In der Zwischenzeit kannst du deine Lernstatistiken verbessern, Wiederholungen planen und dich auf den nächsten Shadowing-Block vorbereiten.
       </p>
     </div>
   )

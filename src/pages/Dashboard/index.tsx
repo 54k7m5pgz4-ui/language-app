@@ -1,7 +1,9 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Flame, Zap, Star, Bot, Layers, Languages, Trophy, BookOpen } from 'lucide-react'
 import { useProgressStore } from '../../store/useProgressStore'
+import { useVocabStore } from '../../store/useVocabStore'
 import { APP_CONFIG, DAILY_GOAL_XP, XP_PER_LEVEL } from '../../config/appConfig'
 import { getFadeUpVariant } from '../../lib/animations'
 
@@ -29,6 +31,31 @@ export default function Dashboard() {
   const dailyPct = Math.min(Math.round((todayXP / DAILY_GOAL_XP) * 100), 100)
   const todayIdx = getTodayIndex()
   const goalReached = todayXP >= DAILY_GOAL_XP
+
+  const { getTopDueDecks } = useVocabStore()
+  const [topDecks, setTopDecks] = useState<Array<{ deckId: string; label: string; emoji: string; total: number; due: number }>>([])
+  const [recommendationText, setRecommendationText] = useState('')
+
+  useEffect(() => {
+    const loadLearningRecommendations = async () => {
+      const dueDecks = await getTopDueDecks()
+      setTopDecks(dueDecks.slice(0, 3))
+
+      if (dueDecks.length === 0) {
+        setRecommendationText(
+          'Dein Lernplan ist aktuell ausgeglichen. Nutze den KI-Tutor für Shadowing oder wiederhole ein Thema deiner Wahl.',
+        )
+        return
+      }
+
+      const topDeck = dueDecks[0]
+      setRecommendationText(
+        `Fokus heute: ${topDeck.label}. ${topDeck.due} fällige Karte${topDeck.due === 1 ? '' : 'n'} warten auf Wiederholung.`,
+      )
+    }
+
+    loadLearningRecommendations()
+  }, [getTopDueDecks])
 
   const quickActions = [
     {
@@ -240,6 +267,63 @@ export default function Dashboard() {
               </motion.div>
             )
           })}
+        </div>
+      </motion.div>
+
+      {/* Adaptive Learning Path */}
+      <motion.div
+        {...getFadeUpVariant(0.18)}
+        className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 border border-slate-100 dark:border-slate-700/60 shadow-md"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase font-semibold tracking-[0.3em] text-indigo-500 dark:text-indigo-400">Adaptiver Lernpfad</p>
+            <h2 className="mt-2 text-lg font-bold text-slate-900 dark:text-white">Empfehlung für heute</h2>
+          </div>
+          <div className="rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 px-3 py-2 text-xs font-semibold text-indigo-700 dark:text-indigo-100">
+            {goalReached ? 'Stark unterwegs' : 'Am Ball bleiben'}
+          </div>
+        </div>
+
+        <p className="mt-4 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+          {recommendationText}
+        </p>
+
+        {topDecks.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5">
+            {topDecks.map((deck) => (
+              <div
+                key={deck.deckId}
+                className="rounded-3xl border border-slate-100 dark:border-slate-700/60 p-4 bg-slate-50 dark:bg-slate-900/75"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">{deck.emoji}</span>
+                  <div>
+                    <p className="font-semibold text-slate-900 dark:text-white">{deck.label}</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{deck.due} fällig · {deck.total} Wörter</p>
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-white dark:bg-slate-800 p-3 text-[11px] text-slate-500 dark:text-slate-400">
+                  Empfohlen, um deine Wiederholungsserie zu stärken.
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <button
+            onClick={() => navigate('/vocab')}
+            className="w-full rounded-3xl bg-indigo-500 text-white px-4 py-3 font-semibold shadow-lg shadow-indigo-300/30 hover:bg-indigo-600 transition-colors"
+          >
+            Mini-Test starten
+          </button>
+          <button
+            onClick={() => navigate('/tutor')}
+            className="w-full rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 px-4 py-3 font-semibold text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            Shadowing & Aussprache üben
+          </button>
         </div>
       </motion.div>
 

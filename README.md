@@ -11,6 +11,7 @@ A modern, AI-powered language learning application built with React, TypeScript,
 - **Offline Support** - Local storage for vocabulary and progress
 - **Mobile-First Design** - Beautiful responsive UI with dark mode support
 - **Gamification** - Badges, levels, and daily challenges
+- **Adaptiver Lernpfad** - Fokusthemen, Minitests und Shadowing-Vorbereitung
 
 ## 🛠️ Tech Stack
 

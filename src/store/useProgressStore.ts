@@ -9,11 +9,21 @@ const mondayIndex = () => {
   return d === 0 ? 6 : d - 1
 }
 
+interface ReviewRecord {
+  date: string
+  deck: string
+  cardId: string
+  quality: number
+  correct: boolean
+}
+
 interface ProgressStore extends Progress {
+  reviewHistory: ReviewRecord[]
   addXP: (amount: number) => void
   addWord: () => void
   markLessonComplete: (id: string) => void
   addBadge: (id: string) => void
+  recordReview: (deck: string, cardId: string, quality: number, correct: boolean) => void
   resetWeekIfNeeded: () => void
 }
 
@@ -29,6 +39,7 @@ export const useProgressStore = create<ProgressStore>()(
       lessonsCompleted: [],
       badges: [],
       todayXP: 0,
+      reviewHistory: [],
 
       addXP: (amount) => {
         const s = get()
@@ -72,6 +83,18 @@ export const useProgressStore = create<ProgressStore>()(
         if (!s.badges.includes(id)) {
           set({ badges: [...s.badges, id] })
         }
+      },
+
+      recordReview: (deck, cardId, quality, correct) => {
+        const s = get()
+        const entry = {
+          date: todayStr(),
+          deck,
+          cardId,
+          quality,
+          correct,
+        }
+        set({ reviewHistory: [entry, ...s.reviewHistory].slice(0, 30) })
       },
 
       resetWeekIfNeeded: () => {

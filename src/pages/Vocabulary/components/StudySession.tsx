@@ -5,6 +5,7 @@ import FlashCard from './FlashCard'
 import { sm2Update, type SMQuality } from '../../../lib/srs'
 import { db } from '../../../lib/db'
 import { useVocabStore } from '../../../store/useVocabStore'
+import { useProgressStore } from '../../../store/useProgressStore'
 import type { VocabCard } from '../../../types'
 
 interface SessionResult {
@@ -35,6 +36,7 @@ export default function StudySession({ deckId, deckLabel, onComplete, onBack }: 
   const [direction, setDirection] = useState(1)
 
   const { getDueCards } = useVocabStore()
+  const recordReview = useProgressStore((s) => s.recordReview)
 
   // Load due cards on mount
   useEffect(() => {
@@ -69,6 +71,7 @@ export default function StudySession({ deckId, deckLabel, onComplete, onBack }: 
 
     const isCorrect = quality >= 3
     const newCorrect = correct + (isCorrect ? 1 : 0)
+    recordReview(card.deck, card.id, quality, isCorrect)
 
     if (isLast) {
       onComplete({ total: cards.length, correct: newCorrect })
